@@ -30,21 +30,24 @@ def softmax_loss_naive(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  scores = np.dot(X,W)
-  scoremax = np.max(scores)
-  scoreshrink = scores - scoremax
-  e_scores = np.exp(scoreshrink)
-  score_sum = np.sum(e_scores, axis = 1)
-  score_sum = np.atleast_2d(score_sum).T
-  h_x = (1/(score_sum)) * e_scores
-
-  loss = (np.sum(-np.log(h_x))/X.shape[0]) + reg*np.sum(np.linalg.norm(W))
-    
-  for i, j in enumerate(h_x):
-    if(i == y[i]):
-        dW[i] = -1 + h_x[i]
-    else:
-        dW[i] = h_x[i]
+  num_train = X.shape[0]
+  num_classes = W.shape[1]
+  for i in xrange(num_train):
+      scores = X[i, :].dot(W)
+      scores -= np.max(scores)
+      correct_scores = scores[y[i]]
+      score_sum = np.sum(np.exp(scores))
+      h = np.exp(correct_scores) / score_sum
+      loss += -np.log(h)
+      for j in xrange(num_classes):
+          if j == y[i]:
+              dW[:, y[i]] += (np.exp(scores[j]) / score_sum - 1) * X[i, :]
+          else:
+              dW[:, j] += (np.exp(scores[j]) / score_sum) * X[i, :]
+                
+                
+  loss /= num_train + ( reg * np.sum(W * W))
+  dW /= num_train
 
   #############################################################################
   #                          END OF YOUR CODE                                 #
@@ -70,9 +73,8 @@ def softmax_loss_vectorized(W, X, y, reg):
   # regularization!                                                           #
   #############################################################################
   scores = np.dot(X,W)
-  scoremax = np.max(scores)
-  scoreshrink = scores - scoremax
-  e_scores = np.exp(scoreshrink)
+  scores -= np.max(scores)
+  e_scores = np.exp(scores)
   score_sum = np.sum(e_scores, axis = 1)
   score_sum = np.atleast_2d(score_sum).T
   h_x = (1/(score_sum)) * e_scores
