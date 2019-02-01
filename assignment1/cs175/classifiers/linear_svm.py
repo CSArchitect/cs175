@@ -102,14 +102,13 @@ def svm_loss_vectorized(W, X, y, reg):
   # to reuse some of the intermediate values that you used to compute the     #
   # loss.                                                                     #
   #############################################################################
-  indic = y * X.dot(W).T[0]
-  indic[indic < 1] = 1
-  indic[indic > 1] = 0
-  print("X shape", X.shape)
-  print("y shape", y.shape)
-  print("indic shape", indic.shape)
-  dW = -y*X[:, 0]*indic
-    
+  margins[margins > 0] = 1
+  sum = np.sum(margins, axis=1)
+  margins[np.arange(X.shape[0]),y] = -sum.T
+  dW = np.dot(X.T, margins)
+
+  dW /= X.shape[0]
+  dW += reg*W 
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
