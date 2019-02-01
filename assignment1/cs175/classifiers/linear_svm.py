@@ -26,6 +26,7 @@ def svm_loss_naive(W, X, y, reg):
   num_classes = W.shape[1]
   num_train = X.shape[0]
   loss = 0.0
+    
   for i in xrange(num_train):
     scores = X[i].dot(W)
     correct_class_score = scores[y[i]]
@@ -35,13 +36,17 @@ def svm_loss_naive(W, X, y, reg):
       margin = scores[j] - correct_class_score + 1 # note delta = 1
       if margin > 0:
         loss += margin
+        dW[:,j] += X[i]
+        dW[:,y[i]] -= X[i]
 
   # Right now the loss is a sum over all training examples, but we want it
   # to be an average instead so we divide by num_train.
   loss /= num_train
+  dW /= num_train
 
   # Add regularization to the loss.
   loss += reg * np.sum(W * W)
+  dW += reg * W
 
   #############################################################################
   # TODO:                                                                     #
@@ -70,7 +75,19 @@ def svm_loss_vectorized(W, X, y, reg):
   # Implement a vectorized version of the structured SVM loss, storing the    #
   # result in loss.                                                           #
   #############################################################################
-  pass
+  scores = X.dot(W)
+
+  onehot = np.zeros((X.shape[0], W.shape[1]))
+  index = np.arange(X.shape[0])
+  onehot[index, y] = 1
+
+  sums = np.sum(onehot, axis=0)
+  margins = scores - sums
+    
+  max = np.maximum(np.zeros((W.shape[1], X.shape[0])).T, margins)
+  max = np.sum(max, axis=0)
+  loss = np.sum(max) / float(X.shape[0])
+  loss += reg * np.sum(W * W)
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
@@ -85,7 +102,14 @@ def svm_loss_vectorized(W, X, y, reg):
   # to reuse some of the intermediate values that you used to compute the     #
   # loss.                                                                     #
   #############################################################################
-  pass
+  indic = y * X.dot(W).T[0]
+  indic[indic < 1] = 1
+  indic[indic > 1] = 0
+  print("X shape", X.shape)
+  print("y shape", y.shape)
+  print("indic shape", indic.shape)
+  dW = -y*X[:, 0]*indic
+    
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
