@@ -117,7 +117,7 @@ class TwoLayerNet(object):
     d_scores[np.arange(N), y] -= 1
     d_scores /= N
     
-    h = np.maximum(z,0)
+    h = np.maximum(X.dot(W1) + b1,0)
 
     d_h = d_scores.dot(W2.T)
     d_h[h<=0] = 0
