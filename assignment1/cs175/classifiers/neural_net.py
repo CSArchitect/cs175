@@ -95,12 +95,20 @@ class TwoLayerNet(object):
     # in the variable loss, which should be a scalar. Use the Softmax           #
     # classifier loss.                                                          #
     #############################################################################
+    scores -= np.max(scores)
     e_scores = np.exp(scores)
-    sum = e_scores / (np.sum(e_scores, axis=1, keepdims=True))
+    score_sum = np.sum(e_scores, axis = 1)
+    score_sum = np.atleast_2d(score_sum).T
+    h_x = (1/(score_sum)) * e_scores
+
+    onehot = np.zeros((X.shape[0], scores.shape[1]))
+    index = np.arange(X.shape[0])
+    onehot[index, y] = 1
+
+    loss = -1*onehot * np.log(h_x)
+    loss = np.mean(np.sum(loss, axis = 1))
     
-    p_log = -np.log(sum[np.arange(N), y])
-    loss = np.sum(p_log) / N
-    loss += reg * (np.sum(W1**2) + np.sum(W2**2))
+    loss += (reg * np.linalg.norm(W1)**2) + (reg * np.linalg.norm(W2)**2)
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -113,7 +121,7 @@ class TwoLayerNet(object):
     # grads['W1'] should store the gradient on W1, and be a matrix of same size #
     #############################################################################
     
-    d_scores = sum
+    d_scores = h_x
     d_scores[np.arange(N), y] -= 1
     d_scores /= N
     
@@ -131,8 +139,8 @@ class TwoLayerNet(object):
     
 
     
-    grads['W2'] += reg * W2
-    grads['W1'] += reg * W1
+    grads['W2'] += 2 * reg * W2
+    grads['W1'] += 2 * reg * W1
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -176,8 +184,8 @@ class TwoLayerNet(object):
       # TODO: Create a random minibatch of training data and labels, storing  #
       # them in X_batch and y_batch respectively.                             #
       #########################################################################
-      index = np.random.choice(X.shape[1], batch_size)
-      X_batch = X[index, :]
+      index = np.random.choice(X.shape[0], batch_size)
+      X_batch = X[index]
       y_batch = y[index]
       #########################################################################
       #                             END OF YOUR CODE                          #
